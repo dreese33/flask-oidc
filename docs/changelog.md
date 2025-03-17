@@ -1,5 +1,32 @@
 # Changelog
 
+## 2.3.1 (2025-03-05)
+
+### Added
+
+- Make the `client_secrets.json` file optional when OIDC is disabled ([1566f85](https://github.com/fedora-infra/flask-oidc/commit/1566f85))
+
+### Fixed
+
+- Link to the docs in the README ([b95e9d9](https://github.com/fedora-infra/flask-oidc/commit/b95e9d9))
+- Fix build in readthedocs ([1b49dca](https://github.com/fedora-infra/flask-oidc/commit/1b49dca))
+
+
+## 2.3.0 (2025-03-04)
+
+### Added
+
+- Added a setting to disable OIDC authentication for testing and dev ([bb2f015](https://github.com/fedora-infra/flask-oidc/commit/bb2f015))
+- Support Python 3.12 ([3e2fc0a](https://github.com/fedora-infra/flask-oidc/commit/3e2fc0a))
+
+### Fixed
+
+- Make the GH actions triggers more specific ([cde8047](https://github.com/fedora-infra/flask-oidc/commit/cde8047))
+- Fix a typo in the Github Actions ([756601a](https://github.com/fedora-infra/flask-oidc/commit/756601a))
+- Reuse: convert dep5 to REUSE.toml ([95f3fd6](https://github.com/fedora-infra/flask-oidc/commit/95f3fd6))
+- Modernize pyproject.toml ([9911b23](https://github.com/fedora-infra/flask-oidc/commit/9911b23))
+
+
 ## 2.2.2 (2024-10-24)
 
 ### Added
