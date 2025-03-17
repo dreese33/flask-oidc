@@ -50,6 +50,12 @@ class IntrospectTokenValidator(BaseIntrospectTokenValidator):
     def introspect_token(self, token_string):
         """Return the token introspection result."""
         oauth = g._oidc_auth
+        if not current_app.config["OIDC_ENABLED"]:
+            testing_profile = current_app.config.get("OIDC_TESTING_PROFILE", {})
+            return {
+                "active": bool(testing_profile),
+                "scope": current_app.config["OIDC_SCOPES"],
+            }
         metadata = oauth.load_server_metadata()
         if "introspection_endpoint" not in metadata:
             raise RuntimeError(
@@ -101,6 +107,8 @@ class OpenIDConnect:
                     DeprecationWarning,
                     stacklevel=2,
                 )
+
+        app.config.setdefault("OIDC_ENABLED", True)
 
         secrets = self.load_secrets(app)
         self.client_secrets = list(secrets.values())[0]
@@ -175,7 +183,16 @@ class OpenIDConnect:
 
     def load_secrets(self, app):
         # Load client_secrets.json to pre-initialize some configuration
-        content_or_filepath = app.config["OIDC_CLIENT_SECRETS"]
+        if app.config["OIDC_ENABLED"]:
+            content_or_filepath = app.config["OIDC_CLIENT_SECRETS"]
+        else:
+            content_or_filepath = {
+                "web": {
+                    "client_id": "testing-client-id",
+                    "client_secret": "testing-client-secret",
+                    "issuer": "https://oidc.example.com",
+                }
+            }
         if isinstance(content_or_filepath, dict):
             return content_or_filepath
         else:
@@ -184,10 +201,21 @@ class OpenIDConnect:
 
     def _before_request(self):
         g._oidc_auth = self.oauth.oidc
-        if current_app.extensions.get("_oidc_user_class"):
-            g.oidc_user = current_app.extensions["_oidc_user_class"](self)
-        if not current_app.config["OIDC_RESOURCE_SERVER_ONLY"]:
-            return self.check_token_expiry()
+        User = current_app.extensions.get("_oidc_user_class")
+        if User:
+            g.oidc_user = User(self)
+        if not current_app.config["OIDC_ENABLED"]:
+            # Setup a testing user token and profile
+            testing_profile = current_app.config.get("OIDC_TESTING_PROFILE", {})
+            if testing_profile:
+                session["oidc_auth_token"] = {
+                    "access_token": "testing-access-token",
+                }
+                session["oidc_auth_profile"] = testing_profile
+            return  # Don't validate/introspect the token
+        if current_app.config["OIDC_RESOURCE_SERVER_ONLY"]:
+            return
+        return self.check_token_expiry()
 
     def check_token_expiry(self):
         try:
